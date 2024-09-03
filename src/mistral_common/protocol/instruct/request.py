@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Generic, List, Optional
+from typing import Generic, List, Optional, Union
 
 from pydantic import Field
 
@@ -24,3 +24,22 @@ class ChatCompletionRequest(BaseCompletionRequest, Generic[ChatMessageType]):
     response_format: ResponseFormat = Field(default_factory=ResponseFormat)
     tools: Optional[List[Tool]] = None
     tool_choice: ToolChoice = ToolChoice.auto
+
+
+### TODO@: Unused for now
+class BatchRequestInput(MistralBase):
+    """
+    Batching the requests.
+    """
+    model: Optional[str] = None
+    messages: Union[List[ChatMessageType], List[List[ChatMessageType]]]
+    response_format: ResponseFormat = Field(default_factory=ResponseFormat)
+    tools: Optional[List[Tool]] = None
+    tool_choice: ToolChoice = ToolChoice.auto
+
+
+# class BatchRequestOutput(MistralBase):
+#     id: str
+
+# class BatchResponseData(MistralBase):
+#     input: BatchRequestInput

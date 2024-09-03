@@ -138,11 +138,23 @@ class MistralTokenizer(
 
         raise TokenizerException(f"Unrecognized tokenizer version: {tokenizer.version}")
 
-    def encode_chat_completion(self, request: ChatCompletionRequest[UATS]) -> TokenizedType:
-        validated_request = self._chat_completion_request_validator.validate_request(request)
-        instruct_request = self._instruct_request_normalizer.from_chat_completion_request(validated_request)
-        return self.instruct_tokenizer.encode_instruct(instruct_request)
+    def encode_chat_completion(self, request: Union[ChatCompletionRequest[UATS], List[ChatCompletionRequest[UATS]]]) -> TokenizedType:
+        """
+        Normally we'd only have in input List[ChatCompletionRequest[UATS]], but kept
+        ChatCompletionRequest[UATS] for compatibility with the old API.
+        """
+        def process_request(r: ChatCompletionRequest[UATS]) -> TokenizedType:
+            validated_request = self._chat_completion_request_validator.validate_request(r)
+            instruct_request = self._instruct_request_normalizer.from_chat_completion_request(validated_request)
+            return self.instruct_tokenizer.encode_instruct(instruct_request)
 
+        if isinstance(request, ChatCompletionRequest):
+            return process_request(request)
+        elif isinstance(request, list) and all(isinstance(r, ChatCompletionRequest) for r in request):
+            return [process_request(r) for r in request]
+        else:
+            raise ValueError("Invalid request type")
+    
     def encode_fim(self, request: FIMRequest) -> TokenizedType:
         return self.instruct_tokenizer.encode_fim(request)
 
